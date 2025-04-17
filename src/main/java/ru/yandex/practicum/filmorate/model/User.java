@@ -1,0 +1,32 @@
+package ru.yandex.practicum.filmorate.model;
+
+import jakarta.validation.constraints.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class User {
+    private int id;
+    @NotBlank(message = "Email не может быть пустым")
+    @Email(message = "Email должен быть корректным и содержать символ '@'")
+    @Size(max = 100, message = "Email не может быть длиннее 100 символов")
+    private String email;
+    @NotBlank(message = "Логин не может быть пустым")
+    @Pattern(regexp = "^\\S+$", message = "Логин не может содержать пробелы")
+    @Size(max = 50, message = "Логин не может быть длиннее 50 символов")
+    private String login;
+    /**
+     * Имя пользователя. Если не указано или пустое, используется значение логина.
+     */
+    @Size(max = 100, message = "Имя не может быть длиннее 100 символов")
+    private String name;
+    @NotNull(message = "Дата рождения не может быть пустой")
+    @PastOrPresent(message = "Дата рождения не может быть в будущем")
+    private LocalDate birthday;
+    //накосячил с первым пул реквестом
+}
