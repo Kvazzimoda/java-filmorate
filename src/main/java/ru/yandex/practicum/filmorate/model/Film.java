@@ -34,4 +34,5 @@ public class Film {
         LocalDate earliestDate = LocalDate.of(1895, 12, 28);
         return !releaseDate.isBefore(earliestDate);
     }
+    //накосячил с первым пул реквестом
 }

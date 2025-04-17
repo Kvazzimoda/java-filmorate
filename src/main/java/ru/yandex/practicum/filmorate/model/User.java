@@ -28,4 +28,5 @@ public class User {
     @NotNull(message = "Дата рождения не может быть пустой")
     @PastOrPresent(message = "Дата рождения не может быть в будущем")
     private LocalDate birthday;
+    //накосячил с первым пул реквестом
 }

@@ -42,5 +42,5 @@ public class UserController {
     public Collection<User> getAllUsers() {
         return users.values();
     }
-
+//накосячил с первым пул реквестом
 }
