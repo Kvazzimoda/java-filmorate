@@ -6,11 +6,16 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
+
+    private final Set<Integer> friends = new HashSet<>();
+
     private int id;
     @NotBlank(message = "Email не может быть пустым")
     @Email(message = "Email должен быть корректным и содержать символ '@'")
@@ -28,5 +33,4 @@ public class User {
     @NotNull(message = "Дата рождения не может быть пустой")
     @PastOrPresent(message = "Дата рождения не может быть в будущем")
     private LocalDate birthday;
-    //накосячил с первым пул реквестом
 }

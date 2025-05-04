@@ -5,27 +5,38 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.time.LocalDate;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@ExtendWith(MockitoExtension.class)
 class FilmControllerTest {
+
+    @Mock
+    private FilmService filmService;  // Мокаем зависимость FilmService
+
+    @InjectMocks
+    private FilmController filmController;  // Инжектим мок в контроллер
 
     private MockMvc mockMvc;
     private ObjectMapper objectMapper;
 
     @BeforeEach
     void setUp() {
-        FilmController filmController = new FilmController();
         mockMvc = MockMvcBuilders.standaloneSetup(filmController).build();
         objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule()); // Поддержка LocalDate
+        objectMapper.registerModule(new JavaTimeModule());  // Поддержка LocalDate
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     }
 
@@ -97,5 +108,31 @@ class FilmControllerTest {
                 .andExpect(status().isOk());
     }
 
-    //накосячил с первым пул реквестом
+    @Test
+    void shouldLikeAndUnlikeFilm() throws Exception {
+        mockMvc.perform(put("/films/1/like/2"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(delete("/films/1/like/2"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void shouldGetPopularFilmsDefaultCount() throws Exception {
+        mockMvc.perform(get("/films/popular"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void shouldGetPopularFilmsWithCount() throws Exception {
+        mockMvc.perform(get("/films/popular?count=5"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void shouldGetFilmById() throws Exception {
+        mockMvc.perform(get("/films/1"))
+                .andExpect(status().isOk());
+    }
+
 }
