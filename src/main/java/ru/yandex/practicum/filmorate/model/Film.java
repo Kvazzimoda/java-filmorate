@@ -29,6 +29,7 @@ public class Film {
     private LocalDate releaseDate;
     @Min(value = 1, message = "Продолжительность фильма должна быть положительной")
     private int duration;
+
     @JsonIgnore
     @AssertTrue(message = "Дата релиза не может быть раньше 28 декабря 1895 года")
     private boolean isReleaseDateValid() {
