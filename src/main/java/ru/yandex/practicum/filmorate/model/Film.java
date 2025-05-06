@@ -16,8 +16,6 @@ import java.util.Set;
 @AllArgsConstructor
 public class Film {
 
-    private final Set<Integer> likes = new HashSet<>();
-
     private int id;
     @NotBlank(message = "Название фильма не может быть пустым")
     private String name;
@@ -39,4 +37,6 @@ public class Film {
         LocalDate earliestDate = LocalDate.of(1895, 12, 28);
         return !releaseDate.isBefore(earliestDate);
     }
+
+    private final Set<Integer> likes = new HashSet<>();
 }

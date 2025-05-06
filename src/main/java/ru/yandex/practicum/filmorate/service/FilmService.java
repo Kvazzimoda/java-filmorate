@@ -1,8 +1,9 @@
 package ru.yandex.practicum.filmorate.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
+import org.springframework.web.server.ResponseStatusException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
@@ -23,6 +24,9 @@ public class FilmService {
     }
 
     public Film updateFilm(Film film) {
+        if (filmStorage.getFilmById(film.getId()).isEmpty()) {
+            return null;
+        }
         return filmStorage.updateFilm(film);
     }
 
@@ -49,6 +53,6 @@ public class FilmService {
 
     public Film getFilmOrThrow(int id) {
         return filmStorage.getFilmById(id)
-                .orElseThrow(() -> new ValidationException("Фильм с id=" + id + " не найден"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Film not found"));
     }
 }

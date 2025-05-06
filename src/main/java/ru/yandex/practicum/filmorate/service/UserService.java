@@ -1,8 +1,9 @@
 package ru.yandex.practicum.filmorate.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
+import org.springframework.web.server.ResponseStatusException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.UserStorage;
 
@@ -23,6 +24,9 @@ public class UserService {
     }
 
     public User updateUser(User user) {
+        if (userStorage.getUserById(user.getId()).isEmpty()) {
+            return null; // возвращаем null, если такого пользователя нет
+        }
         return userStorage.updateUser(user);
     }
 
@@ -68,6 +72,6 @@ public class UserService {
 
     public User getUserOrThrow(int id) {
         return userStorage.getUserById(id)
-                .orElseThrow(() -> new ValidationException("Пользователь с id=" + id + " не найден"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
     }
 }

@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.controller;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -33,9 +34,13 @@ public class FilmController {
         return filmService.getAllFilms();
     }
 
-    @PutMapping
-    public Film update(@Valid @RequestBody Film film) {
-        return filmService.updateFilm(film);
+    @PutMapping("/{id}")
+    public ResponseEntity<Film> update(@PathVariable int id, @Valid @RequestBody Film film) {
+        film.setId(id);
+        Film updated = filmService.updateFilm(film);
+        return updated != null
+                ? ResponseEntity.ok(updated)
+                : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
     @GetMapping("/{id}")
@@ -44,13 +49,15 @@ public class FilmController {
     }
 
     @PutMapping("/{id}/like/{userId}")
-    public void addLike(@PathVariable int id, @PathVariable int userId) {
+    public ResponseEntity<Void> addLike(@PathVariable int id, @PathVariable int userId) {
         filmService.addLike(id, userId);
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}/like/{userId}")
-    public void removeLike(@PathVariable int id, @PathVariable int userId) {
+    public ResponseEntity<Void> removeLike(@PathVariable int id, @PathVariable int userId) {
         filmService.removeLike(id, userId);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/popular")

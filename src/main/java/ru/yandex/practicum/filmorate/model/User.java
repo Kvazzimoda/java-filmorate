@@ -14,8 +14,6 @@ import java.util.Set;
 @AllArgsConstructor
 public class User {
 
-    private final Set<Integer> friends = new HashSet<>();
-
     private int id;
     @NotBlank(message = "Email не может быть пустым")
     @Email(message = "Email должен быть корректным и содержать символ '@'")
@@ -33,4 +31,5 @@ public class User {
     @NotNull(message = "Дата рождения не может быть пустой")
     @PastOrPresent(message = "Дата рождения не может быть в будущем")
     private LocalDate birthday;
+    private final Set<Integer> friends = new HashSet<>();
 }
