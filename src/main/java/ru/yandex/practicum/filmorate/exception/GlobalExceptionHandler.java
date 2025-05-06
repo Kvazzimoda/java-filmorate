@@ -3,10 +3,12 @@ package ru.yandex.practicum.filmorate.exception;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -43,6 +45,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleNotFound(NoSuchElementException ex) {
         log.warn("Not found: {}", ex.getMessage());
         return new ResponseEntity<>(Map.of("error", ex.getMessage()), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<Map<String, String>> handleResponseStatusException(ResponseStatusException ex) {
+        return ResponseEntity
+                .status(ex.getStatusCode())
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("error", ex.getReason()));
     }
 
 }

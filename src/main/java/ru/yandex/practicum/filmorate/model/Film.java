@@ -16,7 +16,7 @@ import java.util.Set;
 @AllArgsConstructor
 public class Film {
 
-    private int id;
+    private Integer id;
     @NotBlank(message = "Название фильма не может быть пустым")
     private String name;
     @Size(max = 200, message = "Описание фильма не может быть длиннее 200 символов")

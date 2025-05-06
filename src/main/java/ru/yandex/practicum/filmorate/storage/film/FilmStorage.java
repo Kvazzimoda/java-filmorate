@@ -12,5 +12,5 @@ public interface FilmStorage {
 
     Collection<Film> getAllFilms();
 
-    Optional<Film> getFilmById(int id);
+    Optional<Film> getFilmById(Integer id);
 }

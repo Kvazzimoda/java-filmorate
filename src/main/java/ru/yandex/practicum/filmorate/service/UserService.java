@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.storage.film.UserStorage;
 import java.util.*;
 import java.util.stream.Collectors;
 
+
 @Service
 public class UserService {
     private final UserStorage userStorage;
@@ -70,7 +71,7 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-    public User getUserOrThrow(int id) {
+    public User getUserOrThrow(Integer id) {
         return userStorage.getUserById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
     }

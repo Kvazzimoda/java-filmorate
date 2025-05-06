@@ -14,7 +14,7 @@ import java.util.Set;
 @AllArgsConstructor
 public class User {
 
-    private int id;
+    private Integer id;
     @NotBlank(message = "Email не может быть пустым")
     @Email(message = "Email должен быть корректным и содержать символ '@'")
     @Size(max = 100, message = "Email не может быть длиннее 100 символов")
