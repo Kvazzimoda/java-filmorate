@@ -1,26 +1,29 @@
 package ru.yandex.practicum.filmorate.exception;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<Map<String, String>> handleValidationException(ValidationException ex) {
-        Map<String, String> errorResponse = Map.of("error", ex.getMessage());
-
-        if (ex.getMessage().contains("не найден")) {
-            return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND); // 404
-        }
-
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST); // 400
+        log.warn("Validation error: {}", ex.getMessage());
+        return new ResponseEntity<>(Map.of("error", ex.getMessage()), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -28,12 +31,28 @@ public class GlobalExceptionHandler {
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getFieldErrors().forEach(error ->
                 errors.put(error.getField(), error.getDefaultMessage()));
+        log.warn("MethodArgumentNotValidException: {}", errors);
         return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleAllExceptions(Exception ex) {
+        log.error("Unhandled exception: ", ex);
         return new ResponseEntity<>(Map.of("error", "Internal Server Error: " + ex.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(NoSuchElementException.class)
+    public ResponseEntity<Map<String, String>> handleNotFound(NoSuchElementException ex) {
+        log.warn("Not found: {}", ex.getMessage());
+        return new ResponseEntity<>(Map.of("error", ex.getMessage()), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<Map<String, String>> handleResponseStatusException(ResponseStatusException ex) {
+        return ResponseEntity
+                .status(ex.getStatusCode())
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("error", ex.getReason()));
     }
 
 }

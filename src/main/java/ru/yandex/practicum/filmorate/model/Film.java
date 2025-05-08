@@ -5,6 +5,8 @@ import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Film.
@@ -13,7 +15,8 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Film {
-    private int id;
+
+    private Integer id;
     @NotBlank(message = "Название фильма не может быть пустым")
     private String name;
     @Size(max = 200, message = "Описание фильма не может быть длиннее 200 символов")
@@ -34,5 +37,6 @@ public class Film {
         LocalDate earliestDate = LocalDate.of(1895, 12, 28);
         return !releaseDate.isBefore(earliestDate);
     }
-    //накосячил с первым пул реквестом
+
+    private final Set<Integer> likes = new HashSet<>();
 }
