@@ -15,21 +15,23 @@ import java.util.Set;
 public class User {
 
     private Integer id;
+
     @NotBlank(message = "Email не может быть пустым")
     @Email(message = "Email должен быть корректным и содержать символ '@'")
     @Size(max = 100, message = "Email не может быть длиннее 100 символов")
     private String email;
+
     @NotBlank(message = "Логин не может быть пустым")
     @Pattern(regexp = "^\\S+$", message = "Логин не может содержать пробелы")
     @Size(max = 50, message = "Логин не может быть длиннее 50 символов")
     private String login;
-    /**
-     * Имя пользователя. Если не указано или пустое, используется значение логина.
-     */
+
     @Size(max = 100, message = "Имя не может быть длиннее 100 символов")
     private String name;
+
     @NotNull(message = "Дата рождения не может быть пустой")
     @PastOrPresent(message = "Дата рождения не может быть в будущем")
     private LocalDate birthday;
-    private final Set<Integer> friends = new HashSet<>();
+
+    private final Set<Friendship> friends = new HashSet<>();
 }
