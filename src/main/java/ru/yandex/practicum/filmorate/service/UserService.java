@@ -49,8 +49,8 @@ public class UserService {
         User user = getUserOrThrow(userId);
         User friend = getUserOrThrow(friendId);
 
-        user.getFriends().removeIf(f -> f.getFriendId() == friendId);
-        friend.getFriends().removeIf(f -> f.getFriendId() == userId);
+        user.getFriends().removeIf(f -> Objects.equals(f.getFriendId(), friendId));
+        friend.getFriends().removeIf(f -> Objects.equals(f.getFriendId(), userId));
     }
 
     public Collection<User> getFriends(int userId) {
