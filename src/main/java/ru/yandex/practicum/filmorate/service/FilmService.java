@@ -69,24 +69,10 @@ public class FilmService {
     }
 
     public Film updateFilm(Film film) {
+        // Проверяем существование фильма
         if (filmStorage.getFilmById(film.getId()).isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Film with ID " + film.getId() + " not found");
-        }
-
-        // Проверка MPA
-        if (film.getMpa() != null && !isValidMpa(film.getMpa())) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid MPA rating: " + film.getMpa());
-        }
-
-        // Проверка жанров
-        if (film.getGenres() != null && !film.getGenres().isEmpty()) {
-            Set<Genre> uniqueGenres = film.getGenres().stream().distinct().collect(Collectors.toSet());
-            for (Genre genre : uniqueGenres) {
-                if (!isValidGenre(genre.getId())) {
-                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid genre ID: " + genre.getId());
-                }
-            }
-            film.setGenres(uniqueGenres);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Film with ID " + film.getId() + " not found");
         }
 
         return filmStorage.updateFilm(film);
