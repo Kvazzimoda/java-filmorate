@@ -37,7 +37,15 @@ public class User {
     @PastOrPresent(message = "Дата рождения не может быть в будущем")
     private LocalDate birthday;
 
-    private final Set<Integer> friends = new HashSet<>();
+    private Map<Integer, FriendshipStatus> friends = new HashMap<>();
 
-    private final Map<Integer, FriendshipStatus> friendRequests = new HashMap<>();
+    // Добавляем конструктор для тестов
+    public User(Integer id, String email, String login, String name, LocalDate birthday) {
+        this.id = id;
+        this.email = email;
+        this.login = login;
+        this.name = name;
+        this.birthday = birthday;
+    }
+
 }

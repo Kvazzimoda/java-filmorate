@@ -76,9 +76,12 @@ public class UserController {
         return userService.getFriends(id);
     }
 
-    @GetMapping("/{id}/friends/common/{otherId}")
-    public Collection<User> getCommonFriends(@PathVariable Integer id, @PathVariable int otherId) {
-        return userService.getCommonFriends(id, otherId);
+    @PutMapping("/{id}/friends/{friendId}/confirm")
+    public ResponseEntity<Void> confirmFriend(
+            @PathVariable Integer id,
+            @PathVariable Integer friendId) {
+        userService.addFriend(id, friendId);
+        return ResponseEntity.ok().build();
     }
 
 }

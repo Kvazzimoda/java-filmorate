@@ -40,21 +40,10 @@ public class UserService {
         User user = getUserOrThrow(userId);
         User friend = getUserOrThrow(friendId);
 
-        // Добавляем запрос дружбы от user к friend
-        user.getFriendRequests().put(friendId, FriendshipStatus.PENDING);
-
-        // Предположим, что если запрос уже есть от friend, то это подтверждение
-        if (friend.getFriendRequests().containsKey(userId) && friend.getFriendRequests().get(userId)
-                == FriendshipStatus.PENDING) {
-            // Подтверждаем дружбу
-            user.getFriendRequests().put(friendId, FriendshipStatus.CONFIRMED);
-            friend.getFriendRequests().put(userId, FriendshipStatus.CONFIRMED);
-
-            // Добавляем друг друга в список друзей
-            user.getFriends().add(friendId);
-            friend.getFriends().add(userId);
-        }
+        // Добавляем запись о дружбе с статусом UNCONFIRMED
+        user.getFriends().put(friendId, FriendshipStatus.UNCONFIRMED);
     }
+
 
     public void removeFriend(int userId, int friendId) {
         User user = getUserOrThrow(userId);
@@ -64,23 +53,17 @@ public class UserService {
         friend.getFriends().remove(userId);
     }
 
-    public Collection<User> getFriends(int userId) {
-        return getUserOrThrow(userId).getFriends().stream()
-                .map(userStorage::getUserById)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
+    public List<User> getFriends(Integer userId) {
+        return getUserOrThrow(userId).getFriends().keySet().stream()
+                .map(this::getUserOrThrow)
                 .collect(Collectors.toList());
     }
 
-    public Collection<User> getCommonFriends(int userId, int otherId) {
-        Set<Integer> userFriends = getUserOrThrow(userId).getFriends();
-        Set<Integer> otherFriends = getUserOrThrow(otherId).getFriends();
-
-        return userFriends.stream()
-                .filter(otherFriends::contains)
-                .map(userStorage::getUserById)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
+    public List<User> getConfirmedFriends(Integer userId) {
+        return getUserOrThrow(userId).getFriends().entrySet().stream()
+                .filter(e -> e.getValue() == FriendshipStatus.CONFIRMED)
+                .map(Map.Entry::getKey)
+                .map(this::getUserOrThrow)
                 .collect(Collectors.toList());
     }
 
