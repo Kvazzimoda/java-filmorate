@@ -36,12 +36,13 @@ public class UserService {
         return userStorage.getAllUsers();
     }
 
-    public void addFriend(Integer userId, Integer friendId) {
+    public void addFriend(int userId, int friendId) {
         User user = getUserOrThrow(userId);
         User friend = getUserOrThrow(friendId);
 
-        // Добавляем запись о дружбе с статусом UNCONFIRMED
+        // Добавляем друзей с дефолтным статусом (например, UNCONFIRMED)
         user.getFriends().put(friendId, FriendshipStatus.UNCONFIRMED);
+        friend.getFriends().put(userId, FriendshipStatus.UNCONFIRMED);
     }
 
 
@@ -53,17 +54,27 @@ public class UserService {
         friend.getFriends().remove(userId);
     }
 
-    public List<User> getFriends(Integer userId) {
-        return getUserOrThrow(userId).getFriends().keySet().stream()
-                .map(this::getUserOrThrow)
+    public Collection<User> getFriends(int userId) {
+        User user = getUserOrThrow(userId);
+        return user.getFriends().keySet().stream() // Используем keySet() для получения ID друзей
+                .map(userStorage::getUserById)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
                 .collect(Collectors.toList());
     }
 
-    public List<User> getConfirmedFriends(Integer userId) {
-        return getUserOrThrow(userId).getFriends().entrySet().stream()
-                .filter(e -> e.getValue() == FriendshipStatus.CONFIRMED)
-                .map(Map.Entry::getKey)
-                .map(this::getUserOrThrow)
+    public Collection<User> getCommonFriends(int userId, int otherId) {
+        User user = getUserOrThrow(userId);
+        User otherUser = getUserOrThrow(otherId);
+
+        Set<Integer> userFriends = user.getFriends().keySet(); // Получаем ключи (ID друзей)
+        Set<Integer> otherFriends = otherUser.getFriends().keySet();
+
+        return userFriends.stream()
+                .filter(otherFriends::contains)
+                .map(userStorage::getUserById)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
                 .collect(Collectors.toList());
     }
 

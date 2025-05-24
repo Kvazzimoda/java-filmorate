@@ -26,9 +26,11 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<User> create(@Valid @RequestBody User user) {
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
+        }
         User createdUser = userService.addUser(user);
-        URI location = URI.create("/users/" + createdUser.getId());  // URI к созданному ресурсу
-        return ResponseEntity.created(location).body(createdUser);  // Возвращаем статус 201
+        return ResponseEntity.created(URI.create("/users/" + createdUser.getId())).body(createdUser);
     }
 
     @GetMapping
@@ -76,12 +78,9 @@ public class UserController {
         return userService.getFriends(id);
     }
 
-    @PutMapping("/{id}/friends/{friendId}/confirm")
-    public ResponseEntity<Void> confirmFriend(
-            @PathVariable Integer id,
-            @PathVariable Integer friendId) {
-        userService.addFriend(id, friendId);
-        return ResponseEntity.ok().build();
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public Collection<User> getCommonFriends(@PathVariable Integer id, @PathVariable int otherId) {
+        return userService.getCommonFriends(id, otherId);
     }
 
 }

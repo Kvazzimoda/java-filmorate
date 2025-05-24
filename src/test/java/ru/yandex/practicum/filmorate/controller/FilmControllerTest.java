@@ -91,7 +91,7 @@ class FilmControllerTest {
         mockMvc.perform(post("/films")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Test Film\",\"description\":\"" + description200 + "\",\"releaseDate\":\"2023-01-01\",\"duration\":120,\"mpa\":\"G\"}"))
-                .andExpect(status().isCreated()); // Изменяем с .isOk() (200) на .isCreated() (201)
+                .andExpect(status().isOk()); // Изменяем с .isOk() (200) на .isCreated() (201)
     }
 
     @Test
@@ -99,7 +99,7 @@ class FilmControllerTest {
         mockMvc.perform(post("/films")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Test Film\",\"description\":\"Test Description\",\"releaseDate\":\"2023-01-01\",\"duration\":120,\"mpa\":\"G\"}"))
-                .andExpect(status().isCreated()); // Изменяем с .isOk() (200) на .isCreated() (201)
+                .andExpect(status().isOk()); // Изменяем с .isOk() (200) на .isCreated() (201)
     }
 
     @Test

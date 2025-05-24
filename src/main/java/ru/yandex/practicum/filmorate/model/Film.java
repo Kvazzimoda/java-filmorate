@@ -12,16 +12,6 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Film {
-
-    public Film(Integer id, String name, String description, LocalDate releaseDate, int duration) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.releaseDate = releaseDate;
-        this.duration = duration;
-        this.genres = new HashSet<>(); // Инициализация genres
-    }
-
     private Integer id;
 
     @NotBlank(message = "Название фильма не может быть пустым")
@@ -39,9 +29,9 @@ public class Film {
 
     private final Set<Integer> likes = new HashSet<>();
 
-    private Set<Genre> genres = new HashSet<>();
-
-    private MpaRating mpa; // Изменяем тип с Mpa на MpaRating
+    // Новые поля:
+    private Set<Genre> genres = new HashSet<>(); // Множество жанров
+    private MpaRating mpa; // Рейтинг MPA
 
     @JsonIgnore
     @AssertTrue(message = "Дата релиза не может быть раньше 28 декабря 1895 года")
@@ -51,5 +41,13 @@ public class Film {
         }
         LocalDate earliestDate = LocalDate.of(1895, 12, 28);
         return !releaseDate.isBefore(earliestDate);
+    }
+
+    public Film(Integer id, String name, String description, LocalDate releaseDate, int duration) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.releaseDate = releaseDate;
+        this.duration = duration;
     }
 }

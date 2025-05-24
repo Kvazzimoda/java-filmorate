@@ -28,8 +28,7 @@ public class FilmController {
 
     @PostMapping
     public ResponseEntity<Film> create(@Valid @RequestBody Film film) {
-        Film createdFilm = filmService.addFilm(film);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdFilm); // 201 вместо 200
+        return ResponseEntity.ok(filmService.addFilm(film));
     }
 
     @GetMapping
@@ -42,7 +41,9 @@ public class FilmController {
         if (film.getId() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Film ID is required");
         }
+
         Film updatedFilm = filmService.updateFilm(film);
+
         if (updatedFilm != null) {
             return ResponseEntity.ok(updatedFilm);
         } else {
@@ -51,13 +52,8 @@ public class FilmController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Film> getFilmById(@PathVariable Integer id) {
-        try {
-            Film film = filmService.getFilmOrThrow(id);
-            return ResponseEntity.ok(film);
-        } catch (NoSuchElementException ex) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Film with ID " + id + " not found");
-        }
+    public Film getFilmById(@PathVariable Integer id) {
+        return filmService.getFilmOrThrow(id);
     }
 
     @PutMapping("/{id}/like/{userId}")
