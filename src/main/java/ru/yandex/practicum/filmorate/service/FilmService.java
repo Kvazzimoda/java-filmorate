@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import ru.yandex.practicum.filmorate.controller.GenreController;
 import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
@@ -14,15 +15,38 @@ import java.util.stream.Collectors;
 public class FilmService {
     private final FilmStorage filmStorage;
     private final UserService userService;
+    private final GenreController genreController;
 
     @Autowired
-    public FilmService(FilmStorage filmStorage, UserService userService) {
+    public FilmService(FilmStorage filmStorage, UserService userService, GenreController genreController) {
         this.filmStorage = filmStorage;
         this.userService = userService;
+        this.genreController = genreController;
     }
 
     public Film addFilm(Film film) {
+        // Проверка MPA
+        if (film.getMpa() != null && !EnumSet.allOf(MpaRating.class).contains(film.getMpa())) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid MPA rating");
+        }
+
+        // Проверка жанров
+        if (film.getGenres() != null) {
+            for (Genre genre : film.getGenres()) {
+                if (!isValidGenre(genre.getId())) { // Предположим, есть метод проверки жанра
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid genre ID: " + genre.getId());
+                }
+            }
+        }
+
+        // Логика добавления фильма
         return filmStorage.addFilm(film);
+    }
+
+    // Метод проверки валидности жанра
+    private boolean isValidGenre(int genreId) {
+        List<Genre> allGenres = genreController.getAll(); // Получаем список всех жанров
+        return allGenres.stream().anyMatch(genre -> genre.getId() == genreId);
     }
 
     public Film updateFilm(Film film) {
@@ -36,16 +60,20 @@ public class FilmService {
         return filmStorage.getAllFilms();
     }
 
-    public void addLike(int filmId, int userId) {
-        Film film = getFilmOrThrow(filmId);       // проверка на наличие фильма
-        User user = userService.getUserOrThrow(userId);  // проверка на наличие пользователя
+    public void addLike(Integer filmId, Integer userId) {
+        Film film = getFilmOrThrow(filmId);
+        User user = userService.getUserOrThrow(userId); // Предполагаем, что есть доступ к UserService
         film.getLikes().add(userId);
+        // Обновляем фильм в хранилище
+        updateFilm(film);
     }
 
-    public void removeLike(int filmId, int userId) {
+    public void removeLike(Integer filmId, Integer userId) {
         Film film = getFilmOrThrow(filmId);
         User user = userService.getUserOrThrow(userId);
         film.getLikes().remove(userId);
+        // Обновляем фильм в хранилище
+        updateFilm(film);
     }
 
     public List<Film> getPopularFilms(int count) {

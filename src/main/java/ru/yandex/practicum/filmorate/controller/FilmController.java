@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -28,7 +29,8 @@ public class FilmController {
 
     @PostMapping
     public ResponseEntity<Film> create(@Valid @RequestBody Film film) {
-        return ResponseEntity.ok(filmService.addFilm(film));
+        Film createdFilm = filmService.addFilm(film);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdFilm); // 201 вместо 200
     }
 
     @GetMapping
@@ -41,9 +43,7 @@ public class FilmController {
         if (film.getId() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Film ID is required");
         }
-
         Film updatedFilm = filmService.updateFilm(film);
-
         if (updatedFilm != null) {
             return ResponseEntity.ok(updatedFilm);
         } else {
@@ -52,8 +52,13 @@ public class FilmController {
     }
 
     @GetMapping("/{id}")
-    public Film getFilmById(@PathVariable Integer id) {
-        return filmService.getFilmOrThrow(id);
+    public ResponseEntity<Film> getFilmById(@PathVariable Integer id) {
+        try {
+            Film film = filmService.getFilmOrThrow(id);
+            return ResponseEntity.ok(film);
+        } catch (NoSuchElementException ex) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Film with ID " + id + " not found");
+        }
     }
 
     @PutMapping("/{id}/like/{userId}")
@@ -81,4 +86,17 @@ public class FilmController {
         return filmService.getPopularFilms(count);
     }
 
+    // Обработка ошибок валидации
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<String> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        String errorMessage = ex.getBindingResult().getAllErrors().getFirst().getDefaultMessage();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage); // 400
+    }
+
+    // Обработка общих исключений (например, ошибки в сервисе)
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<String> handleGeneralExceptions(Exception ex) {
+        log.error("Internal server error: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal server error");
+    }
 }

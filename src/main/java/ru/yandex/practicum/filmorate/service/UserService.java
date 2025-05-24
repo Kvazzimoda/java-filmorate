@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.UserStorage;
 
@@ -35,12 +36,24 @@ public class UserService {
         return userStorage.getAllUsers();
     }
 
-    public void addFriend(int userId, int friendId) {
+    public void addFriend(Integer userId, Integer friendId) {
         User user = getUserOrThrow(userId);
         User friend = getUserOrThrow(friendId);
 
-        user.getFriends().add(friendId);
-        friend.getFriends().add(userId);
+        // Добавляем запрос дружбы от user к friend
+        user.getFriendRequests().put(friendId, FriendshipStatus.PENDING);
+
+        // Предположим, что если запрос уже есть от friend, то это подтверждение
+        if (friend.getFriendRequests().containsKey(userId) && friend.getFriendRequests().get(userId)
+                == FriendshipStatus.PENDING) {
+            // Подтверждаем дружбу
+            user.getFriendRequests().put(friendId, FriendshipStatus.CONFIRMED);
+            friend.getFriendRequests().put(userId, FriendshipStatus.CONFIRMED);
+
+            // Добавляем друг друга в список друзей
+            user.getFriends().add(friendId);
+            friend.getFriends().add(userId);
+        }
     }
 
     public void removeFriend(int userId, int friendId) {

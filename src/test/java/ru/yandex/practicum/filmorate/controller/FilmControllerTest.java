@@ -86,26 +86,20 @@ class FilmControllerTest {
     }
 
     @Test
-    void shouldPassWhenDescriptionIsExactly200() throws Exception {
-        String validDescription = "a".repeat(200);
-        Film film = new Film(0, "Valid Name", validDescription, LocalDate.of(2000, 1, 1), 120);
-        String json = objectMapper.writeValueAsString(film);
-
+    public void shouldPassWhenDescriptionIsExactly200() throws Exception {
+        String description200 = "a".repeat(200); // 200 символов
         mockMvc.perform(post("/films")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andExpect(status().isOk());
+                        .content("{\"name\":\"Test Film\",\"description\":\"" + description200 + "\",\"releaseDate\":\"2023-01-01\",\"duration\":120,\"mpa\":\"G\"}"))
+                .andExpect(status().isCreated()); // Изменяем с .isOk() (200) на .isCreated() (201)
     }
 
     @Test
-    void shouldAddFilmWithValidData() throws Exception {
-        Film film = new Film(0, "Valid Name", "Description", LocalDate.of(2000, 1, 1), 120);
-        String json = objectMapper.writeValueAsString(film);
-
+    public void shouldAddFilmWithValidData() throws Exception {
         mockMvc.perform(post("/films")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andExpect(status().isOk());
+                        .content("{\"name\":\"Test Film\",\"description\":\"Test Description\",\"releaseDate\":\"2023-01-01\",\"duration\":120,\"mpa\":\"G\"}"))
+                .andExpect(status().isCreated()); // Изменяем с .isOk() (200) на .isCreated() (201)
     }
 
     @Test
