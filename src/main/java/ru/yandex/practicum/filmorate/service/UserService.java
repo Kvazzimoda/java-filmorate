@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.UserStorage;
 
@@ -39,9 +40,11 @@ public class UserService {
         User user = getUserOrThrow(userId);
         User friend = getUserOrThrow(friendId);
 
-        user.getFriends().add(friendId);
-        friend.getFriends().add(userId);
+        // Добавляем друзей с дефолтным статусом (например, UNCONFIRMED)
+        user.getFriends().put(friendId, FriendshipStatus.UNCONFIRMED);
+        friend.getFriends().put(userId, FriendshipStatus.UNCONFIRMED);
     }
+
 
     public void removeFriend(int userId, int friendId) {
         User user = getUserOrThrow(userId);
@@ -52,7 +55,8 @@ public class UserService {
     }
 
     public Collection<User> getFriends(int userId) {
-        return getUserOrThrow(userId).getFriends().stream()
+        User user = getUserOrThrow(userId);
+        return user.getFriends().keySet().stream() // Используем keySet() для получения ID друзей
                 .map(userStorage::getUserById)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
@@ -60,8 +64,11 @@ public class UserService {
     }
 
     public Collection<User> getCommonFriends(int userId, int otherId) {
-        Set<Integer> userFriends = getUserOrThrow(userId).getFriends();
-        Set<Integer> otherFriends = getUserOrThrow(otherId).getFriends();
+        User user = getUserOrThrow(userId);
+        User otherUser = getUserOrThrow(otherId);
+
+        Set<Integer> userFriends = user.getFriends().keySet(); // Получаем ключи (ID друзей)
+        Set<Integer> otherFriends = otherUser.getFriends().keySet();
 
         return userFriends.stream()
                 .filter(otherFriends::contains)

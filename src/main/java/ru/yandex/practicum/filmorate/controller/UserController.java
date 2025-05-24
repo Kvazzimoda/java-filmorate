@@ -26,9 +26,11 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<User> create(@Valid @RequestBody User user) {
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
+        }
         User createdUser = userService.addUser(user);
-        URI location = URI.create("/users/" + createdUser.getId());  // URI к созданному ресурсу
-        return ResponseEntity.created(location).body(createdUser);  // Возвращаем статус 201
+        return ResponseEntity.created(URI.create("/users/" + createdUser.getId())).body(createdUser);
     }
 
     @GetMapping
