@@ -37,15 +37,16 @@ public class UserService {
         return userStorage.getAllUsers();
     }
 
-    public void addFriend(int userId, int friendId) {
+    public void addFriend(Integer userId, Integer friendId) {
         User user = getUserOrThrow(userId);
         User friend = getUserOrThrow(friendId);
 
         user.getFriends().add(new Friendship(friendId, FriendshipStatus.UNCONFIRMED));
         friend.getFriends().add(new Friendship(userId, FriendshipStatus.CONFIRMED));
+
     }
 
-    public void removeFriend(int userId, int friendId) {
+    public void removeFriend(Integer userId, Integer friendId) {
         User user = getUserOrThrow(userId);
         User friend = getUserOrThrow(friendId);
 
@@ -53,7 +54,7 @@ public class UserService {
         friend.getFriends().removeIf(f -> Objects.equals(f.getFriendId(), userId));
     }
 
-    public Collection<User> getFriends(int userId) {
+    public Collection<User> getFriends(Integer userId) {
         return getUserOrThrow(userId).getFriends().stream()
                 .map(Friendship::getFriendId)
                 .map(userStorage::getUserById)
