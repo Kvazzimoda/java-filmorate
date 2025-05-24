@@ -19,8 +19,8 @@ public class Film {
         this.description = description;
         this.releaseDate = releaseDate;
         this.duration = duration;
+        this.genres = new HashSet<>(); // Инициализация genres
     }
-
 
     private Integer id;
 
@@ -39,9 +39,9 @@ public class Film {
 
     private final Set<Integer> likes = new HashSet<>();
 
-    private Set<Genre> genres = new HashSet<>(); // ✅ Новое поле
+    private Set<Genre> genres = new HashSet<>();
 
-    private MpaRating mpa; // ✅ Новое поле
+    private MpaRating mpa; // Изменяем тип с Mpa на MpaRating
 
     @JsonIgnore
     @AssertTrue(message = "Дата релиза не может быть раньше 28 декабря 1895 года")
