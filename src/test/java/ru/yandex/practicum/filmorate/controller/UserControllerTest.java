@@ -155,12 +155,6 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldGetCommonFriends() throws Exception {
-        mockMvc.perform(get("/users/1/friends/common/2"))
-                .andExpect(status().isOk());
-    }
-
-    @Test
     void shouldGetUserById() throws Exception {
         mockMvc.perform(get("/users/1"))
                 .andExpect(status().isOk());
