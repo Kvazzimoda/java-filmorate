@@ -10,7 +10,6 @@ import ru.yandex.practicum.filmorate.storage.film.UserStorage;
 import java.util.*;
 import java.util.stream.Collectors;
 
-
 @Service
 public class UserService {
     private final UserStorage userStorage;
@@ -25,17 +24,16 @@ public class UserService {
     }
 
     public User updateUser(User user) {
-        if (userStorage.getUserById(user.getId()).isEmpty()) {
-            return null; // возвращаем null, если такого пользователя нет
-        }
-        return userStorage.updateUser(user);
+        return userStorage.getUserById(user.getId())
+                .map(u -> userStorage.updateUser(user))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
     }
 
     public Collection<User> getAllUsers() {
         return userStorage.getAllUsers();
     }
 
-    public void addFriend(int userId, int friendId) {
+    public void addFriend(Integer userId, Integer friendId) {
         User user = getUserOrThrow(userId);
         User friend = getUserOrThrow(friendId);
 
@@ -43,7 +41,7 @@ public class UserService {
         friend.getFriends().add(userId);
     }
 
-    public void removeFriend(int userId, int friendId) {
+    public void removeFriend(Integer userId, Integer friendId) {
         User user = getUserOrThrow(userId);
         User friend = getUserOrThrow(friendId);
 
@@ -51,28 +49,21 @@ public class UserService {
         friend.getFriends().remove(userId);
     }
 
-
-    public Collection<User> getFriends(int userId) {
+    public Collection<User> getFriends(Integer userId) {
         return getUserOrThrow(userId).getFriends().stream()
-                .map(userStorage::getUserById)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
+                .map(this::getUserOrThrow)
                 .collect(Collectors.toList());
     }
 
-
-    public Collection<User> getCommonFriends(int userId, int otherId) {
+    public Collection<User> getCommonFriends(Integer userId, Integer otherId) {
         Set<Integer> userFriends = getUserOrThrow(userId).getFriends();
         Set<Integer> otherFriends = getUserOrThrow(otherId).getFriends();
 
         return userFriends.stream()
                 .filter(otherFriends::contains)
-                .map(userStorage::getUserById)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
+                .map(this::getUserOrThrow)
                 .collect(Collectors.toList());
     }
-
 
     public User getUserOrThrow(Integer id) {
         return userStorage.getUserById(id)
