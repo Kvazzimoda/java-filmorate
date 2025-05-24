@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import ru.yandex.practicum.filmorate.model.Friendship;
+import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.UserStorage;
 
@@ -26,7 +28,7 @@ public class UserService {
 
     public User updateUser(User user) {
         if (userStorage.getUserById(user.getId()).isEmpty()) {
-            return null; // возвращаем null, если такого пользователя нет
+            return null;
         }
         return userStorage.updateUser(user);
     }
@@ -39,20 +41,21 @@ public class UserService {
         User user = getUserOrThrow(userId);
         User friend = getUserOrThrow(friendId);
 
-        user.getFriends().add(friendId);
-        friend.getFriends().add(userId);
+        user.getFriends().add(new Friendship(friendId, FriendshipStatus.UNCONFIRMED));
+        friend.getFriends().add(new Friendship(userId, FriendshipStatus.CONFIRMED));
     }
 
     public void removeFriend(int userId, int friendId) {
         User user = getUserOrThrow(userId);
         User friend = getUserOrThrow(friendId);
 
-        user.getFriends().remove(friendId);
-        friend.getFriends().remove(userId);
+        user.getFriends().removeIf(f -> f.getFriendId() == friendId);
+        friend.getFriends().removeIf(f -> f.getFriendId() == userId);
     }
 
     public Collection<User> getFriends(int userId) {
         return getUserOrThrow(userId).getFriends().stream()
+                .map(Friendship::getFriendId)
                 .map(userStorage::getUserById)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
@@ -60,11 +63,16 @@ public class UserService {
     }
 
     public Collection<User> getCommonFriends(int userId, int otherId) {
-        Set<Integer> userFriends = getUserOrThrow(userId).getFriends();
-        Set<Integer> otherFriends = getUserOrThrow(otherId).getFriends();
+        Set<Integer> userFriendIds = getUserOrThrow(userId).getFriends().stream()
+                .map(Friendship::getFriendId)
+                .collect(Collectors.toSet());
 
-        return userFriends.stream()
-                .filter(otherFriends::contains)
+        Set<Integer> otherFriendIds = getUserOrThrow(otherId).getFriends().stream()
+                .map(Friendship::getFriendId)
+                .collect(Collectors.toSet());
+
+        return userFriendIds.stream()
+                .filter(otherFriendIds::contains)
                 .map(userStorage::getUserById)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
@@ -76,3 +84,4 @@ public class UserService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
     }
 }
+

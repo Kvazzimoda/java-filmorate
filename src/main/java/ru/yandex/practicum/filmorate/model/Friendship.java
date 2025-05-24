@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Friendship {
-    private Integer userId;    // ID пользователя, которому принадлежит дружба
-    private Integer friendId;  // ID друга
+    private Integer friendId;
     private FriendshipStatus status;
 }
+

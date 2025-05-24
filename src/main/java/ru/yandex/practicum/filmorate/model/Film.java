@@ -13,6 +13,15 @@ import java.util.Set;
 @AllArgsConstructor
 public class Film {
 
+    public Film(Integer id, String name, String description, LocalDate releaseDate, int duration) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.releaseDate = releaseDate;
+        this.duration = duration;
+    }
+
+
     private Integer id;
 
     @NotBlank(message = "Название фильма не может быть пустым")
