@@ -3,11 +3,12 @@ package ru.yandex.practicum.filmorate.model;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 @Data
@@ -26,7 +27,9 @@ public class User {
     @Pattern(regexp = "^\\S+$", message = "Логин не может содержать пробелы")
     @Size(max = 50, message = "Логин не может быть длиннее 50 символов")
     private String login;
-
+    /**
+     * Имя пользователя. Если не указано или пустое, используется значение логина.
+     */
     @Size(max = 100, message = "Имя не может быть длиннее 100 символов")
     private String name;
 
@@ -34,7 +37,7 @@ public class User {
     @PastOrPresent(message = "Дата рождения не может быть в будущем")
     private LocalDate birthday;
 
-    @Getter
-    private final Set<Integer> friendIds = new HashSet<>();
+    private final Set<Integer> friends = new HashSet<>();
 
+    private final Map<Integer, FriendshipStatus> friendRequests = new HashMap<>();
 }
