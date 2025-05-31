@@ -1,65 +1,72 @@
 package ru.yandex.practicum.filmorate.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.*;
-import java.util.stream.Collectors;
+
 
 @Service
+@RequiredArgsConstructor
 public class FilmService {
     private final FilmStorage filmStorage;
-    private final UserService userService;
-
-    @Autowired
-    public FilmService(FilmStorage filmStorage, UserService userService) {
-        this.filmStorage = filmStorage;
-        this.userService = userService;
-    }
+    private final UserStorage userStorage;
 
     public Film addFilm(Film film) {
-        return filmStorage.addFilm(film);
+
+        Film createdFilm = filmStorage.addFilm(film);
+
+        // Извлекаем жанры, сортируем по id и устанавливаем обратно
+        if (createdFilm.getGenres() != null) {
+            List<Genre> sortedGenres = new ArrayList<>(createdFilm.getGenres());
+            sortedGenres.sort(Comparator.comparingInt(Genre::getId));
+            createdFilm.setGenres(new LinkedHashSet<>(sortedGenres));
+        }
+        return createdFilm;
     }
 
     public Film updateFilm(Film film) {
-        if (filmStorage.getFilmById(film.getId()).isEmpty()) {
-            return null;
+        Film updatedFilm = filmStorage.updateFilm(film);
+
+        // Извлекаем жанры, сортируем по id и устанавливаем обратно
+        if (updatedFilm.getGenres() != null) {
+            List<Genre> sortedGenres = new ArrayList<>(updatedFilm.getGenres());
+            sortedGenres.sort(Comparator.comparingInt(Genre::getId));
+            updatedFilm.setGenres(new LinkedHashSet<>(sortedGenres));
         }
-        return filmStorage.updateFilm(film);
+        return updatedFilm;
     }
 
     public Collection<Film> getAllFilms() {
         return filmStorage.getAllFilms();
     }
 
+    public Film getFilmById(int id) {
+        return filmStorage.getFilmById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Film not found"));
+    }
+
     public void addLike(int filmId, int userId) {
-        Film film = getFilmOrThrow(filmId);       // проверка на наличие фильма
-        User user = userService.getUserOrThrow(userId);  // проверка на наличие пользователя
-        film.getLikes().add(userId);
+        getFilmById(filmId);
+        userStorage.getUserById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        filmStorage.addLike(filmId, userId);
     }
 
     public void removeLike(int filmId, int userId) {
-        Film film = getFilmOrThrow(filmId);
-        User user = userService.getUserOrThrow(userId);
-        film.getLikes().remove(userId);
+        getFilmById(filmId);
+        userStorage.getUserById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        filmStorage.removeLike(filmId, userId);
     }
 
-    public List<Film> getPopularFilms(int count) {
-        return filmStorage.getAllFilms().stream()
-                .sorted(Comparator.comparingInt((Film f) -> f.getLikes().size()).reversed())
-                .limit(count)
-                .collect(Collectors.toList());
+    public Collection<Film> getPopularFilms(int count) {
+        return filmStorage.getPopularFilms(count);
     }
 
-    public Film getFilmOrThrow(Integer id) {
-        return filmStorage.getFilmById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Film with ID " + id + " not found"
-                ));
-    }
 }
