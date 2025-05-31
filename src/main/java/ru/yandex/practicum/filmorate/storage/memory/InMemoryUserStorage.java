@@ -1,12 +1,17 @@
-package ru.yandex.practicum.filmorate.storage.film;
+package ru.yandex.practicum.filmorate.storage.memory;
 
-import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
+import ru.yandex.practicum.filmorate.storage.user.impl.UserDbStorage;
 
 import java.util.*;
 
-@Component
-public class InMemoryUserStorage implements UserStorage {
+/**
+ * In-memory storage for users.
+ * @deprecated Use {@link UserDbStorage} for production-ready database storage.
+ */
+@Deprecated(since = "1.0", forRemoval = true)
+public abstract class InMemoryUserStorage implements UserStorage {
     private final Map<Integer, User> users = new HashMap<>();
     private int idCounter = 0;
 

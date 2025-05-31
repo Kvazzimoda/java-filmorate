@@ -6,6 +6,7 @@ import lombok.*;
 
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
@@ -27,6 +28,9 @@ public class Film {
     private LocalDate releaseDate;
     @Min(value = 1, message = "Продолжительность фильма должна быть положительной")
     private int duration;
+
+    private Mpa mpa; // Добавляем поле для MPA
+    private Set<Genre> genres = new LinkedHashSet<>(); // Добавляем поле для жанров
 
     @JsonIgnore
     @AssertTrue(message = "Дата релиза не может быть раньше 28 декабря 1895 года")

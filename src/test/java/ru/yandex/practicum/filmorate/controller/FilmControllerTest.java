@@ -13,11 +13,17 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.time.LocalDate;
+import java.util.Set;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,7 +48,8 @@ class FilmControllerTest {
 
     @Test
     void shouldReturn400WhenNameIsBlank() throws Exception {
-        Film film = new Film(0, "", "Description", LocalDate.of(2000, 1, 1), 120);
+        Film film = new Film(0, "", "Description", LocalDate.of(2000, 1, 1), 120,
+                new Mpa(), Set.of());
         String json = objectMapper.writeValueAsString(film);
 
         mockMvc.perform(post("/films")
@@ -54,7 +61,8 @@ class FilmControllerTest {
     @Test
     void shouldReturn400WhenDescriptionIsTooLong() throws Exception {
         String longDescription = "a".repeat(201);
-        Film film = new Film(0, "Valid Name", longDescription, LocalDate.of(2000, 1, 1), 120);
+        Film film = new Film(0, "Valid Name", longDescription, LocalDate.of(2000, 1, 1), 120,
+                new Mpa(), Set.of());
         String json = objectMapper.writeValueAsString(film);
 
         mockMvc.perform(post("/films")
@@ -65,7 +73,8 @@ class FilmControllerTest {
 
     @Test
     void shouldReturn400WhenReleaseDateIsBefore1895() throws Exception {
-        Film film = new Film(0, "Valid Name", "Description", LocalDate.of(1895, 12, 27), 120);
+        Film film = new Film(0, "Valid Name", "Description", LocalDate.of(1895, 12, 27), 120,
+                new Mpa(), Set.of());
         String json = objectMapper.writeValueAsString(film);
 
         mockMvc.perform(post("/films")
@@ -76,7 +85,8 @@ class FilmControllerTest {
 
     @Test
     void shouldReturn400WhenDurationIsZeroOrNegative() throws Exception {
-        Film film = new Film(0, "Valid Name", "Description", LocalDate.of(2000, 1, 1), 0);
+        Film film = new Film(0, "Valid Name", "Description", LocalDate.of(2000, 1, 1), 0,
+                new Mpa(), Set.of());
         String json = objectMapper.writeValueAsString(film);
 
         mockMvc.perform(post("/films")
@@ -86,20 +96,38 @@ class FilmControllerTest {
     }
 
     @Test
-    public void shouldPassWhenDescriptionIsExactly200() throws Exception {
-        String description200 = "a".repeat(200); // 200 символов
+    void shouldPassWhenDescriptionIsExactly200() throws Exception {
+        String exactDescription = "a".repeat(200);
+        Film film = new Film(0, "Valid Name", exactDescription,
+                LocalDate.of(2000, 1, 1), 120,
+                new Mpa(1, "G"), Set.of());
+
+        when(filmService.addFilm(any(Film.class))).thenReturn(film);
+
         mockMvc.perform(post("/films")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"Test Film\",\"description\":\"" + description200 + "\",\"releaseDate\":\"2023-01-01\",\"duration\":120,\"mpa\":\"G\"}"))
-                .andExpect(status().isOk()); // Изменяем с .isOk() (200) на .isCreated() (201)
+                        .content(objectMapper.writeValueAsString(film)))
+                .andExpect(status().isCreated());
     }
 
     @Test
     public void shouldAddFilmWithValidData() throws Exception {
+        // Подготовка
+        Film inputFilm = new Film(null, "Test Film", "Test Description",
+                LocalDate.of(2023, 1, 1), 120,
+                new Mpa(1, "G"), Set.of(new Genre(1, "Комедия")));
+        Film savedFilm = new Film(1, inputFilm.getName(), inputFilm.getDescription(),
+                inputFilm.getReleaseDate(), inputFilm.getDuration(),
+                inputFilm.getMpa(), inputFilm.getGenres());
+
+        when(filmService.addFilm(any(Film.class))).thenReturn(savedFilm);
+
+        // Выполнение + Проверки
         mockMvc.perform(post("/films")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"Test Film\",\"description\":\"Test Description\",\"releaseDate\":\"2023-01-01\",\"duration\":120,\"mpa\":\"G\"}"))
-                .andExpect(status().isOk()); // Изменяем с .isOk() (200) на .isCreated() (201)
+                        .content(objectMapper.writeValueAsString(inputFilm)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(1));
     }
 
     @Test
