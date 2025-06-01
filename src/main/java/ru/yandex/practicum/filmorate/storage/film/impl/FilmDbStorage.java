@@ -28,6 +28,7 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Film addFilm(Film film) {
         validateMpa(film.getMpa().getId());
+
         String sql = "INSERT INTO films (name, description, release_date, duration, mpa_id) VALUES (?, ?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
 
@@ -41,18 +42,16 @@ public class FilmDbStorage implements FilmStorage {
             return ps;
         }, keyHolder);
 
-        film.setId(Objects.requireNonNull(keyHolder.getKey()).intValue());
-
-        if (film.getGenres() != null && !film.getGenres().isEmpty()) {
-            String genreSql = "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?)";
-            List<Genre> genreList = film.getGenres().stream()
-                    .sorted(Comparator.comparingInt(Genre::getId)) // ✅ сортируем
-                    .toList();
-            for (Genre genre : genreList) {
-                validateGenre(genre.getId()); // Проверка существования жанра
-                jdbcTemplate.update(genreSql, film.getId(), genre.getId());
-            }
+        Number key = keyHolder.getKey();
+        if (key == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Failed to retrieve film ID"
+            );
         }
+        film.setId(key.intValue());
+
+        insertGenres(film);
 
         return film;
     }
@@ -72,16 +71,7 @@ public class FilmDbStorage implements FilmStorage {
         }
 
         jdbcTemplate.update("DELETE FROM film_genres WHERE film_id = ?", film.getId());
-
-        if (film.getGenres() != null && !film.getGenres().isEmpty()) {
-            String genreSql = "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?)";
-            List<Genre> genreList = film.getGenres().stream()
-                    .sorted(Comparator.comparingInt(Genre::getId)) // ✅ сортируем
-                    .toList();
-            for (Genre genre : genreList) {
-                jdbcTemplate.update(genreSql, film.getId(), genre.getId());
-            }
-        }
+        insertGenres(film); // заменил дублирование
 
         return film;
     }
@@ -112,8 +102,13 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public void addLike(int filmId, int userId) {
-        String sql = "INSERT INTO likes (film_id, user_id) VALUES (?, ?)";
-        jdbcTemplate.update(sql, filmId, userId);
+        String checkSql = "SELECT COUNT(*) FROM likes WHERE film_id = ? AND user_id = ?";
+        Integer count = jdbcTemplate.queryForObject(checkSql, Integer.class, filmId, userId);
+
+        if (count != null && count == 0) {
+            String sql = "INSERT INTO likes (film_id, user_id) VALUES (?, ?)";
+            jdbcTemplate.update(sql, filmId, userId);
+        }
     }
 
     @Override
@@ -160,17 +155,24 @@ public class FilmDbStorage implements FilmStorage {
         }
     }
 
+    // доработал работу метода
     private void insertGenres(Film film) {
-        if (film.getGenres() == null || film.getGenres().isEmpty()) return;
-
-        String genreSql = "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?)";
-        List<Genre> genreList = film.getGenres().stream()
-                .sorted(Comparator.comparingInt(Genre::getId)) // ✅ сортировка!
-                .toList();
-
-        for (Genre genre : genreList) {
-            validateGenre(genre.getId());
-            jdbcTemplate.update(genreSql, film.getId(), genre.getId());
+        if (film.getGenres() == null || film.getGenres().isEmpty()) {
+            // Удаляем все жанры, если фильм теперь без жанров
+            jdbcTemplate.update("DELETE FROM film_genres WHERE film_id = ?", film.getId());
+            return;
         }
+
+        // Удаляем старые связи перед вставкой новых
+        jdbcTemplate.update("DELETE FROM film_genres WHERE film_id = ?", film.getId());
+
+        String sql = "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?)";
+
+        film.getGenres().stream()
+                .sorted(Comparator.comparingInt(Genre::getId))
+                .forEach(genre -> {
+                    validateGenre(genre.getId()); // проверка существования жанра
+                    jdbcTemplate.update(sql, film.getId(), genre.getId());
+                });
     }
 }

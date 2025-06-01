@@ -39,7 +39,14 @@ public class UserDbStorage implements UserStorage {
             return ps;
         }, keyHolder);
 
-        user.setId(keyHolder.getKey().intValue());
+        Number key = keyHolder.getKey();
+        if (key == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Failed to retrieve user ID after insert"
+            );
+        }
+        user.setId(key.intValue());
         return user;
     }
 
@@ -67,17 +74,22 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public void addFriend(int userId, int friendId) {
-        if (!getUserById(userId).isPresent() || !getUserById(friendId).isPresent()) {
+        if (getUserById(userId).isEmpty() || getUserById(friendId).isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
         }
 
-        String sql = "INSERT INTO friendships (user_id, friend_id) VALUES (?, ?)";
-        jdbcTemplate.update(sql, userId, friendId);
+        String checkSql = "SELECT COUNT(*) FROM friendships WHERE user_id = ? AND friend_id = ?";
+        Integer count = jdbcTemplate.queryForObject(checkSql, Integer.class, userId, friendId);
+
+        if (count != null && count == 0) {
+            String sql = "INSERT INTO friendships (user_id, friend_id) VALUES (?, ?)";
+            jdbcTemplate.update(sql, userId, friendId);
+        }
     }
 
     @Override
     public void removeFriend(int userId, int friendId) {
-        if (!getUserById(userId).isPresent() || !getUserById(friendId).isPresent()) {
+        if (getUserById(userId).isEmpty() || getUserById(friendId).isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
         }
 
@@ -87,7 +99,7 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public Collection<User> getFriends(int userId) {
-        if (!getUserById(userId).isPresent()) {
+        if (getUserById(userId).isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
         }
         String sql = "SELECT u.* FROM users u JOIN friendships f ON u.id = f.friend_id WHERE f.user_id = ?";
@@ -99,4 +111,5 @@ public class UserDbStorage implements UserStorage {
         String sql = "SELECT friend_id FROM friendships WHERE user_id = ?";
         return jdbcTemplate.queryForList(sql, Integer.class, userId);
     }
+
 }
